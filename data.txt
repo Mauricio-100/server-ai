@@ -1,6 +1,3 @@
-Bonjour je suis une IA
-Comment puis-je vous aider
-Faisons de la recherche avec DuckDuckGo
-Stockons les réponses dans MySQL
-FastText peut répondre aux questions simples
-LangChain aide à reformuler les réponses
+Bonjour je m'appelle Mauricio.
+Je veux apprendre le codage.
+Python est un langage génial.
