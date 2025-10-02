@@ -8,24 +8,31 @@ from pydantic import BaseModel
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
+from urllib.parse import urlparse
 
 # === 1) Charger variables d'environnement ===
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
-CORPUS_FILE = os.getenv("CORPUS_FILE", "data.txt")
-FASTTEXT_DIM = int(os.getenv("FASTTEXT_DIM", 50))
+# MODIFICATION 1: Remplacement de CORPUS_FILE par le chemin du modèle pré-entraîné
+FASTTEXT_MODEL_PATH = os.getenv("FASTTEXT_MODEL_PATH", "cc.fr.300.bin")
 
-# === 2) fastText ===
-model = fasttext.train_unsupervised(CORPUS_FILE, model="skipgram", dim=FASTTEXT_DIM)
+# === 2) fastText : Chargement d'un modèle pré-entraîné ===
+# MODIFICATION 2: On charge un modèle existant au lieu d'en entraîner un à chaque démarrage.
+# C'est ce qui corrige l'erreur "ValueError: empty vocabulary".
+if not os.path.exists(FASTTEXT_MODEL_PATH):
+    print(f"ERREUR : Le modèle fastText '{FASTTEXT_MODEL_PATH}' n'a pas été trouvé.")
+    print("Veuillez le télécharger et le placer dans le bon répertoire.")
+    exit() # Stoppe le script si le modèle est manquant
+
+print("Chargement du modèle fastText...")
+model = fasttext.load_model(FASTTEXT_MODEL_PATH)
+print("Modèle chargé avec succès.")
 
 # === 3) DuckDuckGo Tool ===
 search = DuckDuckGoSearchRun()
 
 # === 4) MySQL connection ===
 def get_db_connection():
-    # Parse DATABASE_URL si nécessaire
-    # Exemple simple pour Aiven
-    from urllib.parse import urlparse
     url = urlparse(DATABASE_URL)
     return mysql.connector.connect(
         host=url.hostname,
@@ -58,13 +65,16 @@ def search_memory(question):
     rows = cursor.fetchall()
     best_answer, best_sim = None, -1
     for q, a, v in rows:
+        # Les vecteurs sont stockés en float32
         vec = np.frombuffer(v, dtype=np.float32)
-        sim = float(np.dot(q_vec, vec)/(np.linalg.norm(q_vec)*np.linalg.norm(vec)+1e-9))
+        # Calcul de la similarité cosinus
+        sim = float(np.dot(q_vec, vec) / (np.linalg.norm(q_vec) * np.linalg.norm(vec) + 1e-9))
         if sim > best_sim:
             best_sim = sim
             best_answer = a
     conn.close()
-    if best_sim > 0.7:
+    # Seuil de similarité pour retourner une réponse de la mémoire
+    if best_sim > 0.8: # J'ai augmenté un peu le seuil pour plus de pertinence
         return best_answer
     return None
 
@@ -72,7 +82,9 @@ def search_memory(question):
 def add_to_memory(question, answer):
     conn = get_db_connection()
     cursor = conn.cursor()
-    vec = model.get_sentence_vector(answer)
+    # MODIFICATION 3: On stocke le vecteur de la QUESTION, pas de la réponse.
+    # C'est plus logique pour retrouver des questions similaires par la suite.
+    vec = model.get_sentence_vector(question)
     cursor.execute(
         "INSERT INTO memory (question, answer, vector) VALUES (%s,%s,%s)",
         (question, answer, vec.tobytes())
@@ -99,17 +111,15 @@ def reformulate(answer):
 
 # === 9) Workflow hybride ===
 def ask_ai(question):
-    # 1) fastText
-    answer = fasttext_answer(question)
-    if answer:
-        return f"(fastText) {reformulate(answer)}"
-    # 2) MySQL
+    # 1) MySQL (Mémoire)
     answer = search_memory(question)
     if answer:
         return f"(Mémoire) {reformulate(answer)}"
-    # 3) DuckDuckGo
+    
+    # 2) DuckDuckGo (Recherche externe)
+    print(f"Recherche sur le web pour : {question}")
     answer = search.run(question)
-    add_to_memory(question, answer)
+    add_to_memory(question, answer) # On mémorise la nouvelle connaissance
     return f"(DuckDuckGo) {reformulate(answer)}"
 
 # === 10) FastAPI ===
@@ -123,4 +133,6 @@ def ask(question: Question):
     return {"answer": response}
 
 # === 11) Initialisation DB ===
+print("Initialisation de la base de données...")
 init_db()
+print("Base de données prête.")
