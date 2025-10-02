@@ -1,0 +1,17 @@
+# FastAPI pour le serveur API
+fastapi==0.100.0
+uvicorn[standard]==0.23.2
+
+# fastText pour apprentissage ML léger
+fasttext==0.9.2
+
+# MySQL connector
+mysql-connector-python==8.1.0
+
+# LangChain et outils associés
+langchain==0.1.0  # adapte selon la version stable la plus récente
+langchain-community==0.0.34  # pour DuckDuckGoSearchRun
+
+# Librairies utilitaires
+numpy==1.27.5
+pydantic==2.3.0
