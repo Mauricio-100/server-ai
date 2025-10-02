@@ -1,14 +1,16 @@
-fastapi
-uvicorn
-python-dotenv
-mysql-connector-python
-numpy
-# --- Bibliothèques pour le LLM et LangChain ---
-langchain
-langchain-community
-torch
-transformers
-sentencepiece
-# --- Bibliothèques pour la recherche dans data.txt (RAG) ---
-faiss-cpu
-sentence-transformers
+    fastapi
+    uvicorn[standard]
+    python-dotenv
+    mysql-connector-python
+    
+    # --- Bibliothèques pour le LLM et LangChain ---
+    langchain
+    langchain-community
+    torch
+    transformers
+    sentencepiece
+    accelerate
+    
+    # --- Bibliothèques pour la recherche dans data.txt (RAG) ---
+    faiss-cpu
+    sentence-transformers
