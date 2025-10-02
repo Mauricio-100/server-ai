@@ -1,8 +1,14 @@
-numpy
-fasttext-wheel
 fastapi
-uvicorn[standard]
+uvicorn
+python-dotenv
 mysql-connector-python
+numpy
+# --- Bibliothèques pour le LLM et LangChain ---
 langchain
 langchain-community
-python-dotenv
+torch
+transformers
+sentencepiece
+# --- Bibliothèques pour la recherche dans data.txt (RAG) ---
+faiss-cpu
+sentence-transformers
