@@ -1,3 +1,8 @@
 Bonjour je m'appelle Mauricio.
 Je veux apprendre le codage.
 Python est un langage génial.
+Bonjour et bienvenue.
+Ceci est un exemple de corpus pour entraîner un modèle de traitement du langage naturel.
+L'intelligence artificielle est un domaine fascinant.
+Nous pouvons parler de technologie, de science, et de programmation.
+Le serveur utilise FastAPI et MySQL pour la mémoire.
