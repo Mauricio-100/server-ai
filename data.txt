@@ -1,1 +1,6 @@
-
+Bonjour je suis une IA
+Comment puis-je vous aider
+Faisons de la recherche avec DuckDuckGo
+Stockons les réponses dans MySQL
+FastText peut répondre aux questions simples
+LangChain aide à reformuler les réponses
